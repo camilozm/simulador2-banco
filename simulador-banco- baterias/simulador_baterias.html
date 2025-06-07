@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Simulador de Banco de Baterías</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="icon-192.png"/>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
+    h1 { text-align: center; }
+    .modo-selector { text-align: center; margin-bottom: 20px; }
+    .modo-selector button { margin: 0 10px; padding: 10px; }
+    .config { display: flex; flex-direction: column; gap: 10px; max-width: 400px; margin: auto; }
+    .resultado { margin-top: 20px; text-align: center; }
+    canvas { margin: 20px auto; display: block; }
+  </style>
+</head>
+<body>
+  <h1>Simulador de Banco de Baterías</h1>
+  <div class="modo-selector">
+    <button onclick="cambiarModo('manual')">Modo Manual</button>
+    <button onclick="cambiarModo('armar')">Armar Visualmente</button>
+  </div>
+
+  <div id="modoManual" class="config">
+    <label>Voltaje de cada batería (V): <input type="number" id="voltaje" value="12"></label>
+    <label>Amperaje de cada batería (Ah): <input type="number" id="amperaje" value="100"></label>
+    <label>Cantidad en serie: <input type="number" id="serie" value="2"></label>
+    <label>Cantidad en paralelo: <input type="number" id="paralelo" value="2"></label>
+    <label>Eficiencia (%): <input type="number" id="eficiencia" value="90"></label>
+    <button onclick="calcular()">Calcular</button>
+  </div>
+
+  <div id="modoArmar" class="config" style="display:none;">
+    <label>Cantidad total de baterías: <input type="number" id="cantidadTotal" value="4"></label>
+    <label>Voltaje por batería: <input type="number" id="voltajeArmar" value="12"></label>
+    <label>Amperaje por batería: <input type="number" id="amperajeArmar" value="100"></label>
+    <button onclick="generarArreglo()">Generar Arreglo</button>
+    <canvas id="canvas" width="400" height="300"></canvas>
+  </div>
+
+  <div class="resultado" id="resultado"></div>
+
+  <script>
+    function cambiarModo(modo) {
+      document.getElementById('modoManual').style.display = modo === 'manual' ? 'flex' : 'none';
+      document.getElementById('modoArmar').style.display = modo === 'armar' ? 'flex' : 'none';
+    }
+
+    function calcular() {
+      const V = parseFloat(document.getElementById('voltaje').value);
+      const A = parseFloat(document.getElementById('amperaje').value);
+      const S = parseInt(document.getElementById('serie').value);
+      const P = parseInt(document.getElementById('paralelo').value);
+      const E = parseFloat(document.getElementById('eficiencia').value) / 100;
+
+      const voltajeTotal = V * S;
+      const capacidadTotal = A * P;
+      const energiaTotal = voltajeTotal * capacidadTotal * E;
+
+      document.getElementById('resultado').innerHTML = `
+        <h3>Resultados:</h3>
+        <p>Voltaje Total: <strong>${voltajeTotal} V</strong></p>
+        <p>Capacidad Total: <strong>${capacidadTotal} Ah</strong></p>
+        <p>Energía Total: <strong>${energiaTotal.toFixed(2)} Wh</strong></p>
+      `;
+    }
+
+    function generarArreglo() {
+      const total = parseInt(document.getElementById('cantidadTotal').value);
+      const voltaje = parseFloat(document.getElementById('voltajeArmar').value);
+      const amperaje = parseFloat(document.getElementById('amperajeArmar').value);
+      const filas = Math.ceil(Math.sqrt(total));
+      const columnas = Math.ceil(total / filas);
+
+      const ctx = document.getElementById('canvas').getContext('2d');
+      ctx.clearRect(0, 0, 400, 300);
+
+      const ancho = 50;
+      const alto = 30;
+      const margenX = 10;
+      const margenY = 10;
+
+      let x = 20, y = 20;
+
+      for (let i = 0; i < total; i++) {
+        ctx.fillStyle = "#2196F3";
+        ctx.fillRect(x, y, ancho, alto);
+        ctx.fillStyle = "#fff";
+        ctx.fillText(`${voltaje}V ${amperaje}Ah`, x + 4, y + 18);
+
+        x += ancho + margenX;
+        if ((i + 1) % columnas === 0) {
+          x = 20;
+          y += alto + margenY;
+        }
+      }
+
+      document.getElementById('resultado').innerHTML = `<p>Arreglo generado con ${total} baterías.</p>`;
+    }
+  </script>
+</body>
+</html>
